@@ -11,6 +11,21 @@ The design goal is **cheap routing, lazy loading**. At boot the master reads onl
 frontmatter (manifest headers), never bodies. Skill bodies load on demand, only when selected.
 This keeps the context budget flat as the framework grows.
 
+> **Origin:** Navigator is an architecture created by **Joshua Ragland** — *"The Shadow Architect."*
+> This repository is a custom build on his framework. See **[Credits & origin](#credits--origin)**.
+
+## Quickstart (30 seconds)
+
+```bash
+node navigator-server.js          # or double-click start.bat on Windows
+```
+
+It prints `runtime up -> http://localhost:4319`. Open that for the **dashboard**, or
+**http://localhost:4319/learn.html** for a plain-English guide to the whole thing (what it is,
+how it routes cognition, refusal patterns, and legal red/blue-team use). Add your own subject with
+`new-domain.ps1 -Name <x> -Keywords "..."`, hit **rescan**, and Navigator routes to it. Zero
+dependencies — just Node 18+.
+
 ## Core ideas
 
 - **Manifest-driven discovery.** Every `.md` begins with YAML frontmatter declaring its
@@ -266,3 +281,24 @@ the matching folder with a conformant manifest; the scanner picks it up by direc
 - `examples/end_to_end_example.md` — that flow traced on a real query.
 - `skills/SKILL_TEMPLATE.md` — how to write a conformant skill.
 - `skills/rules/routing.md` — the heart of intent + domain resolution.
+
+## Credits & origin
+
+**Navigator is an architecture created by Joshua Ragland — *"The Shadow Architect."*** The core
+design is his:
+
+- the *router-not-repository* master skill — *"the master skill does not contain the knowledge — it routes,"*
+- the manifest-driven registry and the build / debug / anti-failure skill **triplets**,
+- the **maps**, the **rules engine**, the **anti-failure** layer, **build orders**, and **engagement mode**,
+- the **Navigator ISA** (`navigator_ISA.md`) — routing expressed as deterministic opcodes over a register file,
+- and **AGENT-ISA** (`prototyping/agent_isa/`) — the execution/safety counterpart that confines the model and owns control flow, gating, and audit.
+
+Read his writeup: **["The Shadow Architect"](https://7hegh05t.substack.com/p/the-shadow-architect)**.
+
+This repository is a **custom build** on that framework — exactly what Navigator is meant for
+("a brain and a router you shape to your task"). What's added on top of Joshua's bare-bones copy:
+a zero-dependency Node **runtime + dashboard**, the **ISA virtual machine**, **multi-provider EXEC**
+(OpenRouter / DeepSeek / z.ai, switchable per run), persistent **engagement mode**, the **persona
+kit**, the **[`/learn.html`](public/learn.html)** guide, and the **`new-domain.ps1`** scaffolder.
+
+Huge thanks to Joshua for the design and for sharing it. 🙏
