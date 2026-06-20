@@ -1,0 +1,22 @@
+# secrets & local config — NEVER commit
+.env
+.env.*
+*.pem
+*.key
+
+# runtime state (may hold engagement scope/findings)
+.engagement/
+
+# logs & temp
+*.log
+*.err
+.server.log*
+tmp/
+
+# node
+node_modules/
+
+# OS junk
+Thumbs.db
+desktop.ini
+.DS_Store

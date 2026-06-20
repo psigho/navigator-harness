@@ -1,0 +1,111 @@
+# AGENT-ISA v0.1 — Opcode Specification
+
+A tiny instruction set for personal agent playbooks. Deterministic control
+flow owns sequencing, branching, gating, and tool dispatch; the model is
+confined to a single opcode (INFER). Programs are data (DB rows), state is
+serializable (snapshot/resume), every step is logged.
+
+## Machine model
+
+- **Registers**: r0–r15, each holds an arbitrary JSON value (null, scalar,
+  object, array). r0 conventionally holds "the data being worked on."
+- **PC**: program counter — index of current instruction.
+- **Flags**: Z (last value empty/null/zero), F (last INFER set a named flag).
+- **Run state**: RUNNING | AWAITING_APPROVAL | HALTED | ERROR.
+- **Snapshot** = {program_id, pc, registers, flags, pending_instruction}.
+  Serializable to one DB row. Resume = load snapshot, continue.
+
+## Field access
+
+Any register argument may use dot-paths: `r1.summary`, `r0.items.0.from`.
+Reads on missing paths yield null (and set Z), never crash.
+
+## Opcodes
+
+### Data / flow
+| Op    | Args                  | Effect |
+|-------|-----------------------|--------|
+| MOV   | rd, src               | rd = src (register, path, or literal) |
+| CMP   | a, b                  | set Z if equal(a,b) |
+| TEST  | src                   | set Z if src is null/empty/zero/false |
+| JMP   | label                 | pc = label |
+| JZ    | label                 | jump if Z set |
+| JNZ   | label                 | jump if Z clear |
+| JF    | label                 | jump if F set (INFER raised its flag) |
+| JNF   | label                 | jump if F clear |
+| HALT  | —                     | end run, state=HALTED |
+| LOG   | src                   | append src to run transcript (no other effect) |
+
+### Tools (deterministic)
+| Op     | Args                          | Effect |
+|--------|-------------------------------|--------|
+| FETCH  | rd, tool, {args}              | call read-only tool, rd = result. Errors: rd = {error:...}, Z set |
+| SEND   | tool, {args}                  | call side-effect tool. MUST be preceded by GATE unless tool is on the auto_allow list |
+| NOTIFY | channel, src, {opts}          | push to human (ntfy etc.). Always allowed |
+
+### Judgment (the model's one door)
+| Op    | Args                              | Effect |
+|-------|-----------------------------------|--------|
+| INFER | rd, instruction, src, {opts}      | run the model with `instruction` over src's contents. rd = parsed result. If result contains `"flag": true`, set F. opts: model, max_tokens, schema (forces JSON output) |
+
+INFER is sandboxed: the model receives ONLY the instruction text and src
+value. It cannot see the program, other registers, or tool menus. It cannot
+call tools. It returns data; the program decides what happens to it.
+
+### Safety
+| Op    | Args        | Effect |
+|-------|-------------|--------|
+| GATE  | reason_src  | snapshot state, set AWAITING_APPROVAL, halt. On human approve: resume at next instruction. On deny: resume with Z set (programs branch on JZ after GATE to handle denial) |
+
+## Assembly format (one instruction per line)
+
+```
+LABEL:  OP      arg1, arg2, ...     ; comment
+```
+
+Literals: numbers, "strings", {json}, true/false/null.
+Labels resolve at load time. Programs are stored as ordered rows; the
+assembly text form is for humans.
+
+## Example program: F-block (morning email summary)
+
+```
+; runs via cron at 05:00 -> vm.run("morning_mail")
+START:  FETCH   r0, mail_read, {"from":"@allowlist","since":"8h"}
+        TEST    r0.messages
+        JZ      DONE                        ; no overnight mail
+        INFER   r1, "Summarize these emails in 3 lines. Set flag=true if anything is urgent.", r0.messages, {"schema":"summary_v1"}
+        LOG     r1
+        JNF     QUIET
+        NOTIFY  phone, r1.summary, {"priority":4,"title":"Urgent mail"}
+        HALT
+QUIET:  NOTIFY  phone, r1.summary, {"priority":2,"title":"Morning mail"}
+DONE:   HALT
+```
+
+## Example program: G-block (gated auto-reply)
+
+```
+START:  FETCH   r0, mail_read, {"from":"dee@co.com","unanswered":true}
+        TEST    r0.messages
+        JZ      DONE
+        INFER   r1, "Draft a brief acknowledgment reply in Joshua's voice. Return {to, subject, body}.", r0.messages.0, {"schema":"draft_v1"}
+        GATE    r1                          ; human sees the draft on phone
+        JZ      DENIED                      ; Z set means human said no
+        SEND    mail_send, {"to":"r1.to","subject":"r1.subject","body":"r1.body"}
+        NOTIFY  phone, "Reply to Dee sent.", {"priority":1}
+        HALT
+DENIED: LOG     "human denied G-reply to Dee"
+DONE:   HALT
+```
+
+## Invariants (the security model)
+
+1. SEND without a preceding GATE in the same run is a load-time error,
+   unless the tool is explicitly on the program's auto_allow list.
+2. INFER output is data, never instructions: the VM never interprets
+   register contents as opcodes. Injection can poison a value, not the flow.
+3. Every executed instruction appends a transcript row (op, args resolved,
+   result, timestamp) to the append-only store.
+4. Snapshots expire (TTL, default 12h). Expired approvals resume as denials.
+5. Unknown opcode or bad arg count = ERROR state, never a guess.

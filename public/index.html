@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NAVIGATOR · Skill Orchestration Console</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- Boot overlay: shows while the first scan loads -->
+  <div id="boot-overlay" class="boot-overlay">
+    <div class="boot-core">
+      <div class="boot-glyph" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="boot-title">NAVIGATOR</div>
+      <div class="boot-sub" id="boot-sub">initialising registry scan…</div>
+      <div class="boot-bar"><i></i></div>
+    </div>
+  </div>
+
+  <div class="shell" id="shell" hidden>
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">◈</div>
+        <div class="brand-text">
+          <div class="brand-name">NAVIGATOR</div>
+          <div class="brand-tag">skill orchestration</div>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-item is-active" data-section="overview">
+          <span class="nav-ico">▦</span><span>Overview</span>
+        </button>
+        <button class="nav-item" data-section="registry">
+          <span class="nav-ico">☰</span><span>Registry</span>
+        </button>
+        <button class="nav-item nav-feature" data-section="router">
+          <span class="nav-ico">⤳</span><span>Router Console</span>
+        </button>
+        <button class="nav-item nav-feature" data-section="isa">
+          <span class="nav-ico">⌗</span><span>ISA Console</span>
+        </button>
+        <button class="nav-item" data-section="context">
+          <span class="nav-ico">▮</span><span>Context Budget</span>
+        </button>
+        <button class="nav-item" data-section="validation">
+          <span class="nav-ico">✓</span><span>Validation</span>
+        </button>
+        <button class="nav-item" data-section="orders">
+          <span class="nav-ico">◷</span><span>Build Orders</span>
+        </button>
+        <button class="nav-item" data-section="hierarchy">
+          <span class="nav-ico">≣</span><span>Conflict Hierarchy</span>
+        </button>
+        <button class="nav-item" data-section="engagement">
+          <span class="nav-ico">⌖</span><span>Engagement</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="health" id="health-pill" title="server health">
+          <span class="dot"></span><span id="health-text">probing…</span>
+        </div>
+        <div class="foot-meta" id="foot-meta">—</div>
+      </div>
+    </aside>
+
+    <!-- ===================== MAIN ===================== -->
+    <main class="main">
+      <header class="topbar">
+        <div class="crumb">
+          <span class="crumb-root">navigator</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-leaf" id="crumb-leaf">overview</span>
+        </div>
+        <div class="topbar-right">
+          <button class="ghost-btn" id="rescan-btn" title="re-scan the registry">⟳ rescan</button>
+          <div class="env-tag" id="env-tag">node runtime</div>
+        </div>
+      </header>
+
+      <div class="view-wrap">
+
+        <!-- ============ OVERVIEW ============ -->
+        <section class="view is-active" data-view="overview">
+          <div class="view-head">
+            <h1>System Overview</h1>
+            <p class="lede">Registry scan summary, framework composition, and triplet completeness for the three canonical demo domains.</p>
+          </div>
+          <div id="overview-stats" class="stat-grid"><div class="skeleton-row">loading…</div></div>
+          <div class="panel">
+            <div class="panel-head"><h2>Triplet Completeness Matrix</h2><span class="panel-note">build · debug · anti-failure per domain</span></div>
+            <div id="triplet-matrix" class="triplet-matrix"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Composition by Type</h2></div>
+            <div id="type-bars" class="type-bars"></div>
+          </div>
+        </section>
+
+        <!-- ============ REGISTRY ============ -->
+        <section class="view" data-view="registry">
+          <div class="view-head">
+            <h1>Skill Registry</h1>
+            <p class="lede">Every scanned framework file with its manifest fields. Click a row to inspect the raw skill.</p>
+          </div>
+          <div class="reg-toolbar">
+            <input id="reg-search" class="text-input" type="search" placeholder="search skill_id, description, keyword…" />
+            <div class="chip-row" id="reg-type-filters"></div>
+          </div>
+          <div class="table-scroll">
+            <table class="reg-table">
+              <thead>
+                <tr>
+                  <th data-sort="skill_id">skill_id</th>
+                  <th data-sort="type">type</th>
+                  <th data-sort="category">category</th>
+                  <th>triggers</th>
+                  <th data-sort="priority">pri</th>
+                  <th data-sort="lines">lines</th>
+                  <th>markers</th>
+                </tr>
+              </thead>
+              <tbody id="reg-body"></tbody>
+            </table>
+          </div>
+          <div class="reg-count" id="reg-count"></div>
+        </section>
+
+        <!-- ============ ROUTER CONSOLE ============ -->
+        <section class="view" data-view="router">
+          <div class="view-head">
+            <h1>Router Console</h1>
+            <p class="lede">Submit a request and watch the routing decision pipeline resolve stage by stage.</p>
+          </div>
+          <form id="router-form" class="router-form">
+            <input id="router-input" class="text-input big" type="text"
+              placeholder="e.g. why does my rust tokio task crash on borrow?" autocomplete="off" />
+            <button type="submit" class="solid-btn">Route ⤳</button>
+          </form>
+          <div class="example-chips" id="router-examples"></div>
+
+          <div id="router-result" class="router-result" hidden>
+            <ol class="pipeline" id="pipeline"></ol>
+          </div>
+          <div id="router-empty" class="router-empty">
+            <div class="re-glyph">⤳</div>
+            <p>Enter a request above, or pick an example, to trace it through the seven-stage decision pipeline.</p>
+          </div>
+        </section>
+
+        <!-- ============ ISA CONSOLE ============ -->
+        <section class="view" data-view="isa">
+          <div class="view-head">
+            <h1>ISA Console</h1>
+            <p class="lede">Navigator routing executed as deterministic opcodes over a register file.</p>
+          </div>
+
+          <div class="isa-cmdbar">
+            <form id="isa-form" class="isa-form">
+              <input id="isa-input" class="text-input big" type="text"
+                placeholder="e.g. fix a python ModuleNotFoundError" autocomplete="off" />
+              <button type="submit" class="solid-btn" id="isa-run">Run ⌗</button>
+            </form>
+            <div class="isa-modebar">
+              <div class="isa-toggle" id="isa-toggle" role="group" aria-label="execution mode">
+                <button type="button" class="isa-mode on" data-mode="live">LIVE</button>
+                <button type="button" class="isa-mode" data-mode="offline">OFFLINE</button>
+              </div>
+              <div class="isa-llmpick">
+                <select id="isa-provider" class="isa-select" aria-label="LLM provider" title="LLM provider"></select>
+                <input id="isa-model" class="isa-model-input" list="isa-model-list" placeholder="model"
+                  aria-label="LLM model" title="LLM model — pick or type any id" autocomplete="off" spellcheck="false" />
+                <datalist id="isa-model-list"></datalist>
+              </div>
+              <div class="isa-llm" id="isa-llm"><span class="dot"></span><span id="isa-llm-text">probing…</span></div>
+              <div class="isa-controls">
+                <button type="button" class="ghost-btn" id="isa-step">▷ step</button>
+                <button type="button" class="ghost-btn" id="isa-reset">⟲ reset</button>
+              </div>
+            </div>
+          </div>
+          <div class="example-chips" id="isa-examples"></div>
+
+          <div class="isa-grid">
+            <!-- (a) PROGRAM listing -->
+            <div class="panel isa-panel isa-program-panel">
+              <div class="panel-head"><h2>Program</h2><span class="panel-note" id="isa-prog-note">microcode</span></div>
+              <div class="isa-program" id="isa-program"><div class="skeleton-row">loading program…</div></div>
+            </div>
+
+            <!-- (b) REGISTER FILE -->
+            <div class="panel isa-panel isa-reg-panel">
+              <div class="panel-head"><h2>Register File</h2><span class="panel-note" id="isa-reg-note">14 registers</span></div>
+              <div class="isa-regs" id="isa-regs"></div>
+            </div>
+
+            <!-- (c) TRACE / OUTPUT -->
+            <div class="panel isa-panel isa-trace-panel">
+              <div class="panel-head"><h2>Trace</h2><span class="panel-note" id="isa-trace-note">execution log</span></div>
+              <div class="isa-trace" id="isa-trace">
+                <div class="isa-trace-empty" id="isa-trace-empty">Run a query to stream the execution trace.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- OUTPUT -->
+          <div class="panel isa-output" id="isa-output" hidden>
+            <div class="isa-out-head">
+              <div class="isa-out-badges" id="isa-out-badges"></div>
+              <div class="isa-verify" id="isa-verify"></div>
+            </div>
+            <div class="isa-out-sources" id="isa-out-sources"></div>
+            <div class="isa-out-label">output</div>
+            <div class="isa-out-body" id="isa-out-body"></div>
+          </div>
+        </section>
+
+        <!-- ============ CONTEXT BUDGET ============ -->
+        <section class="view" data-view="context">
+          <div class="view-head">
+            <h1>Context Budget</h1>
+            <p class="lede">Reserved skills are always resident. Select additional sources to load and watch the 200K-token window fill.</p>
+          </div>
+          <div class="ctx-layout">
+            <div class="panel ctx-meter-panel">
+              <div class="panel-head"><h2>Window</h2><span class="panel-note">200,000 tokens</span></div>
+              <div class="meter">
+                <div class="meter-fill" id="ctx-fill"></div>
+                <div class="meter-ticks"><i style="left:40%"></i><i style="left:65%"></i><i style="left:80%"></i></div>
+              </div>
+              <div class="meter-legend">
+                <span><b class="sw green"></b>GREEN &lt;40%</span>
+                <span><b class="sw yellow"></b>YELLOW 40-65%</span>
+                <span><b class="sw orange"></b>ORANGE 65-80%</span>
+                <span><b class="sw red"></b>RED &gt;80%</span>
+              </div>
+              <div class="ctx-readout" id="ctx-readout"></div>
+              <div class="ctx-breakdown">
+                <div><h3>Reserved <span id="ctx-reserved-tok">0</span></h3><ul id="ctx-reserved-list"></ul></div>
+                <div><h3>Loaded <span id="ctx-loaded-tok">0</span></h3><ul id="ctx-loaded-list"></ul></div>
+              </div>
+            </div>
+            <div class="panel ctx-pick-panel">
+              <div class="panel-head"><h2>Loadable Sources</h2><span class="panel-note" id="ctx-pick-count"></span></div>
+              <input id="ctx-search" class="text-input" type="search" placeholder="filter sources…" />
+              <div class="ctx-picklist" id="ctx-picklist"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VALIDATION ============ -->
+        <section class="view" data-view="validation">
+          <div class="view-head">
+            <h1>Framework Validation</h1>
+            <p class="lede">Twenty-seven structural and integrity checks across the framework tree.</p>
+          </div>
+          <div class="val-top">
+            <button class="solid-btn" id="val-run">Run validation</button>
+            <div class="val-ring-wrap" id="val-ring-wrap" hidden>
+              <svg class="val-ring" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+                <circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="52"></circle>
+              </svg>
+              <div class="val-ring-label"><b id="val-passed">0</b><span id="val-total">/0</span></div>
+            </div>
+          </div>
+          <div id="val-list" class="val-list"></div>
+        </section>
+
+        <!-- ============ BUILD ORDERS ============ -->
+        <section class="view" data-view="orders">
+          <div class="view-head">
+            <h1>Build Orders</h1>
+            <p class="lede">Phased project execution plans parsed from the build-order files.</p>
+          </div>
+          <div id="orders-grid" class="orders-grid"></div>
+        </section>
+
+        <!-- ============ CONFLICT HIERARCHY ============ -->
+        <section class="view" data-view="hierarchy">
+          <div class="view-head">
+            <h1>Conflict Authority Hierarchy</h1>
+            <p class="lede">Nine ranks of authority. When two sources disagree, the lower rank number wins.</p>
+          </div>
+          <div class="ladder" id="ladder"></div>
+        </section>
+
+        <!-- ============ ENGAGEMENT ============ -->
+        <section class="view" data-view="engagement">
+          <div class="view-head">
+            <h1>Engagement Mode</h1>
+            <p class="lede">A guarded operating console. Activation requires the passphrase; once active, scope, terrain coverage, and findings persist server-side across reloads.</p>
+          </div>
+
+          <!-- LOCK STATE -->
+          <div class="panel engage-panel" id="engage-lock" hidden>
+            <div class="lock-state">
+              <div class="lock-glyph">⌖</div>
+              <form id="engage-form" class="engage-form">
+                <input id="engage-pass" class="text-input" type="password" placeholder="activation passphrase" autocomplete="off" />
+                <button type="submit" class="solid-btn">Activate</button>
+              </form>
+              <div class="engage-hint">default: <code>navigator-engage</code></div>
+              <div class="engage-msg" id="engage-msg"></div>
+            </div>
+          </div>
+
+          <!-- LIVE PANEL -->
+          <div class="engage-open" id="engage-open" hidden>
+
+            <!-- (1) BANNER -->
+            <div class="panel engage-banner-panel">
+              <div class="engage-banner"><span class="live-dot"></span> ENGAGEMENT ACTIVE
+                <span class="engage-since" id="engage-since"></span>
+              </div>
+              <div class="engage-banner-actions">
+                <button type="button" class="ghost-btn" id="engage-suspend">⏻ Suspend</button>
+                <button type="button" class="ghost-btn danger" id="engage-reset">⌫ Reset</button>
+              </div>
+            </div>
+
+            <!-- (2) SCOPE -->
+            <div class="panel">
+              <div class="panel-head"><h2>Scope</h2><span class="panel-note">target definition + sub-mode</span></div>
+              <div class="scope-grid">
+                <div class="scope-main">
+                  <label class="field-label" for="engage-scope">scope</label>
+                  <textarea id="engage-scope" class="text-input scope-text" rows="3" placeholder="Define the target scope of this engagement…"></textarea>
+                </div>
+                <div class="scope-side">
+                  <label class="field-label" for="engage-submode">sub-mode</label>
+                  <select id="engage-submode" class="isa-select scope-select"></select>
+                  <button type="button" class="solid-btn scope-save" id="engage-scope-save">Save scope</button>
+                  <span class="saved-flag" id="engage-scope-saved" hidden>saved ✓</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- (3) COVERAGE + TERRAIN -->
+            <div class="panel">
+              <div class="panel-head"><h2>Coverage</h2><span class="panel-note" id="engage-cov-note"></span></div>
+              <div class="cov-headline">
+                <span class="cov-pct" id="engage-cov-pct">0%</span>
+                <div class="cov-track"><i id="engage-cov-fill" style="width:0%"></i></div>
+              </div>
+              <div class="terrain-grid" id="terrain-grid"></div>
+            </div>
+
+            <!-- (4) FINDINGS -->
+            <div class="panel">
+              <div class="panel-head"><h2>Findings</h2><span class="panel-note" id="engage-find-count"></span></div>
+              <form id="engage-find-form" class="find-form">
+                <input id="find-title" class="text-input" type="text" placeholder="finding title *" autocomplete="off" required />
+                <input id="find-note" class="text-input" type="text" placeholder="note (optional)" autocomplete="off" />
+                <input id="find-phase" class="text-input find-sm" type="text" placeholder="phase" autocomplete="off" />
+                <input id="find-domain" class="text-input find-sm" type="text" placeholder="domain" autocomplete="off" />
+                <button type="submit" class="solid-btn">Add</button>
+              </form>
+              <div class="find-list" id="engage-find-list"></div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ===================== SKILL DRAWER ===================== -->
+  <div class="drawer-scrim" id="drawer-scrim" hidden></div>
+  <aside class="drawer" id="drawer" hidden aria-label="skill detail">
+    <div class="drawer-head">
+      <div>
+        <div class="drawer-id" id="drawer-id">skill</div>
+        <div class="drawer-path" id="drawer-path"></div>
+      </div>
+      <button class="ghost-btn" id="drawer-close">✕</button>
+    </div>
+    <div class="drawer-meta" id="drawer-meta"></div>
+    <div class="drawer-body">
+      <div class="drawer-section-label">raw skill</div>
+      <pre class="drawer-raw" id="drawer-raw">loading…</pre>
+    </div>
+  </aside>
+
+  <script src="/app.js"></script>
+</body>
+</html>

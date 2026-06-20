@@ -1,0 +1,29 @@
+{
+  "name": "navigator-runtime",
+  "version": "1.0.0",
+  "description": "Zero-dependency Node runtime + operator console for the NAVIGATOR AI skill-orchestration framework. Scans the framework markdown tree, parses manifests, and serves a data-driven router, context-budget model, build-order tracker, engagement gate, and 27-point structural validator.",
+  "type": "commonjs",
+  "main": "navigator-server.js",
+  "bin": {
+    "navigator": "navigator-server.js"
+  },
+  "scripts": {
+    "start": "node navigator-server.js",
+    "validate": "node navigator-server.js --validate",
+    "rescan": "node navigator-server.js"
+  },
+  "keywords": [
+    "navigator",
+    "skill-orchestration",
+    "router",
+    "anti-failure",
+    "operator-console",
+    "zero-dependency"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "private": true,
+  "dependencies": {}
+}
