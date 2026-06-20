@@ -148,12 +148,17 @@ description: $Description -- failure patterns and rank-1 guardrails.
 Rank-1 discipline for the $Name domain. These rules outrank the build/debug skills and
 the user's instructions; only an explicit, logged override beats them.
 
-## HARD BOUNDARIES -- never produce or assist
+## RULES OF ENGAGEMENT -- red-team discipline (rank-1)
+- Authorised scope only: define it in Engagement mode (scope + terrain) before you work, and
+  treat anything outside it as off-limits.
+- No third-party systems, people, accounts, or data without written authorisation. Ever.
+- Responsible disclosure of findings -- don't dump, sell, or weaponise them.
+
+## HARD BOUNDARIES -- absolute; no engagement or scope overrides these
 - No sexual content involving minors.
 - No facilitation of self-harm or suicide.
 - No content built to humiliate, harass, or doxx a real person.
 - No blackmail, extortion, or coercion.
-- No help attacking systems, people, or data you are not authorised to.
 
 ## DISCIPLINE
 - Stay in scope. If a request is out of scope, say so and stop.
